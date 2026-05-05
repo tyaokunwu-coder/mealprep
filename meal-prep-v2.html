@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="定食备餐">
+<meta name="theme-color" content="#2D5A27">
+<title>一週定食備餐</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F7F5F0;
+  --card: #FFFFFF;
+  --ink: #1A1A18;
+  --ink2: #5A5A55;
+  --ink3: #9A9A95;
+  --accent: #2D5A27;
+  --accent-light: #EAF3DE;
+  --accent-mid: #639922;
+  --pork: #C8470A;
+  --pork-light: #FEF0E8;
+  --chicken: #1A5FA0;
+  --chicken-light: #E6F1FB;
+  --amber: #C07A10;
+  --amber-light: #FEF3E0;
+  --border: #E8E5DE;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --nav-h: 56px;
+  --header-h: 100px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; font-size: 15px; line-height: 1.6; overscroll-behavior: none; }
+
+/* Header */
+.header { background: var(--accent); color: white; padding: 1rem 1.25rem 0.75rem; position: sticky; top: 0; z-index: 100; }
+.header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.header h1 { font-family: 'Noto Serif JP', serif; font-size: 18px; font-weight: 700; letter-spacing: 0.05em; }
+.header-sub { font-size: 11px; opacity: 0.7; }
+.weekend-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; font-family: 'Noto Sans JP', sans-serif; transition: all 0.2s; }
+.weekend-btn.highlight { background: #FFD166; color: #1A1A18; border-color: #FFD166; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.8} }
+.nav-tabs { display: flex; gap: 4px; }
+.nav-tab { flex: 1; padding: 6px 0; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.8); transition: all 0.2s; font-family: 'Noto Sans JP', sans-serif; }
+.nav-tab.active { background: white; color: var(--accent); }
+
+/* Content */
+.content { padding: 1.25rem; max-width: 600px; margin: 0 auto; padding-bottom: 2rem; }
+.section { display: none; }
+.section.active { display: block; }
+
+/* Cards */
+.card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; margin-bottom: 12px; }
+.card-header { padding: 0.85rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.card-title { font-family: 'Noto Serif JP', serif; font-size: 16px; font-weight: 700; }
+.badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+.badge.pork { background: var(--pork-light); color: var(--pork); }
+.badge.chicken { background: var(--chicken-light); color: var(--chicken); }
+
+/* Day scroller */
+.day-scroller { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 1rem; scrollbar-width: none; }
+.day-scroller::-webkit-scrollbar { display: none; }
+.day-btn { flex-shrink: 0; padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--card); font-size: 13px; font-weight: 500; color: var(--ink2); cursor: pointer; transition: all 0.2s; font-family: 'Noto Sans JP', sans-serif; }
+.day-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* Dish rows */
+.dish-row { display: flex; align-items: flex-start; gap: 12px; padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--border); }
+.dish-row:last-child { border-bottom: none; }
+.dish-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.dish-icon.main { background: var(--chicken-light); }
+.dish-icon.veg { background: var(--accent-light); }
+.dish-icon.soup { background: var(--amber-light); }
+.dish-icon.rice { background: #F1EFE8; }
+.dish-info { flex: 1; }
+.dish-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+.dish-note { font-size: 12px; color: var(--ink3); line-height: 1.5; }
+
+/* Prep box */
+.prep-box { margin: 0 1.25rem 1.25rem; background: var(--accent-light); border-radius: var(--radius-sm); padding: 0.85rem 1rem; }
+.prep-box-title { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 6px; }
+.prep-line { font-size: 12px; color: var(--ink2); margin-bottom: 4px; display: flex; gap: 6px; }
+.prep-line:last-child { margin-bottom: 0; }
+.prep-key { font-weight: 500; color: var(--accent); min-width: 44px; flex-shrink: 0; }
+
+/* Rating */
+.rating-row { display: flex; align-items: center; justify-content: space-between; padding: 0.65rem 1.25rem; background: #FAFAFA; border-top: 1px solid var(--border); }
+.rating-label { font-size: 12px; color: var(--ink3); }
+.rating-btns { display: flex; gap: 8px; }
+.rating-btn { padding: 4px 12px; border-radius: 16px; border: 1px solid var(--border); background: white; font-size: 13px; cursor: pointer; transition: all 0.15s; }
+.rating-btn.selected-good { background: var(--accent-light); border-color: var(--accent-mid); }
+.rating-btn.selected-bad { background: var(--pork-light); border-color: var(--pork); }
+
+/* Buy list */
+.buy-section-title { font-size: 12px; font-weight: 700; color: var(--ink3); letter-spacing: 0.05em; margin: 1rem 0 0.5rem; text-transform: uppercase; }
+.buy-item { display: flex; align-items: center; gap: 10px; padding: 0.6rem 1.25rem; cursor: pointer; border-bottom: 1px solid var(--border); background: var(--card); transition: background 0.15s; }
+.buy-item:last-child { border-bottom: none; }
+.buy-checkbox { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.buy-item.checked .buy-checkbox { background: var(--accent-mid); border-color: var(--accent-mid); }
+.buy-item.checked .buy-checkbox::after { content: ''; width: 6px; height: 10px; border: 2px solid white; border-top: none; border-left: none; transform: rotate(45deg) translate(-1px,-1px); display: block; }
+.buy-item-text { flex: 1; font-size: 14px; }
+.buy-item.checked .buy-item-text { text-decoration: line-through; color: var(--ink3); }
+.buy-item-qty { font-size: 12px; color: var(--ink3); }
+.buy-note { font-size: 11px; color: var(--ink3); padding: 0.5rem 1.25rem 0.75rem; font-style: italic; background: var(--card); border-top: 1px solid var(--border); }
+
+/* Week plan */
+.week-slot { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; overflow: hidden; }
+.week-slot-header { padding: 0.75rem 1.25rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.week-slot-day { font-size: 13px; font-weight: 500; }
+.week-slot-dish { font-size: 13px; color: var(--ink2); }
+.keep-btn { padding: 4px 12px; border-radius: 16px; font-size: 12px; cursor: pointer; border: 1px solid var(--border); background: white; font-family: 'Noto Sans JP', sans-serif; transition: all 0.2s; }
+.keep-btn.kept { background: var(--accent-light); border-color: var(--accent-mid); color: var(--accent); }
+.keep-btn.swap { background: var(--pork-light); border-color: var(--pork); color: var(--pork); }
+.week-slot-rating { padding: 0.4rem 1.25rem; font-size: 12px; color: var(--ink3); }
+
+/* Draft preview */
+.draft-card { background: var(--card); border: 2px dashed var(--accent-mid); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 10px; }
+.draft-title { font-size: 13px; font-weight: 500; color: var(--accent); margin-bottom: 8px; }
+.draft-row { font-size: 13px; color: var(--ink2); padding: 3px 0; display: flex; gap: 8px; }
+.draft-day { font-weight: 500; color: var(--ink); min-width: 32px; }
+
+/* Buttons */
+.btn { display: block; width: 100%; padding: 0.85rem; border-radius: var(--radius-sm); border: none; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'Noto Sans JP', sans-serif; transition: all 0.2s; text-align: center; margin-bottom: 8px; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:active { opacity: 0.85; }
+.btn-secondary { background: var(--card); color: var(--ink); border: 1px solid var(--border); }
+.btn-danger { background: var(--pork-light); color: var(--pork); border: 1px solid var(--pork); }
+
+/* Chat */
+.chat-intro { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 1rem 1.25rem; margin-bottom: 1rem; font-size: 13px; color: var(--ink2); line-height: 1.7; }
+.chat-messages { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1rem; min-height: 150px; }
+.msg { max-width: 85%; padding: 0.7rem 1rem; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+.msg.ai { background: var(--card); border: 1px solid var(--border); border-radius: 16px 16px 16px 4px; align-self: flex-start; }
+.msg.user { background: var(--accent); color: white; border-radius: 16px 16px 4px 16px; align-self: flex-end; }
+.msg.loading { color: var(--ink3); font-style: italic; background: var(--card); border: 1px solid var(--border); border-radius: 16px 16px 16px 4px; align-self: flex-start; }
+.chat-input-area { display: flex; gap: 8px; position: sticky; bottom: 0; background: var(--bg); padding: 0.75rem 0 0.5rem; }
+.chat-input { flex: 1; padding: 0.75rem 1rem; border-radius: 24px; border: 1.5px solid var(--border); background: var(--card); font-size: 14px; font-family: 'Noto Sans JP', sans-serif; color: var(--ink); outline: none; }
+.chat-input:focus { border-color: var(--accent-mid); }
+.chat-send { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.chat-send svg { width: 18px; height: 18px; }
+.quick-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.quick-btn { padding: 5px 12px; border-radius: 16px; border: 1px solid var(--accent-mid); background: var(--accent-light); color: var(--accent); font-size: 12px; cursor: pointer; font-family: 'Noto Sans JP', sans-serif; }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: flex-end; justify-content: center; padding: 1rem; }
+.modal-overlay.hidden { display: none; }
+.modal { background: var(--bg); border-radius: 20px 20px 16px 16px; width: 100%; max-width: 600px; max-height: 85vh; overflow-y: auto; }
+.modal-header { padding: 1.25rem 1.25rem 1rem; border-bottom: 1px solid var(--border); background: var(--card); border-radius: 20px 20px 0 0; position: sticky; top: 0; }
+.modal-title { font-family: 'Noto Serif JP', serif; font-size: 17px; font-weight: 700; margin-bottom: 3px; }
+.modal-sub { font-size: 12px; color: var(--ink3); }
+.modal-body { padding: 1.25rem; }
+.modal-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--border); background: var(--card); position: sticky; bottom: 0; }
+
+/* Sync status */
+.sync-bar { font-size: 11px; color: rgba(255,255,255,0.7); text-align: right; margin-top: 4px; }
+.sync-bar.error { color: #FFB3A0; }
+
+/* Info box */
+.info-box { background: var(--amber-light); border-radius: var(--radius-sm); padding: 0.75rem 1rem; font-size: 12px; color: var(--amber); margin-bottom: 1rem; border: 1px solid #F5D78A; }
+
+/* Step indicator */
+.steps { display: flex; gap: 4px; margin-bottom: 1.25rem; }
+.step { flex: 1; height: 3px; border-radius: 2px; background: var(--border); }
+.step.active { background: var(--accent); }
+.step.done { background: var(--accent-mid); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>一週定食 🍱</h1>
+      <div class="header-sub">备餐计划</div>
+    </div>
+    <button class="weekend-btn" id="weekend-btn" onclick="openWeekend()">📅 换菜单</button>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('recipe', this)">本周食谱</button>
+    <button class="nav-tab" onclick="switchTab('buy', this)">采购清单</button>
+    <button class="nav-tab" onclick="switchTab('history', this)">上周回顾</button>
+    <button class="nav-tab" onclick="switchTab('chat', this)">AI助手</button>
+  </div>
+  <div class="sync-bar" id="sync-bar">⏳ 连接中...</div>
+</div>
+
+<div class="content">
+
+  <!-- 本周食谱 -->
+  <div class="section active" id="section-recipe">
+    <div class="day-scroller" id="day-scroller"></div>
+    <div id="recipe-content"></div>
+  </div>
+
+  <!-- 采购清单 -->
+  <div class="section" id="section-buy">
+    <div id="buy-content"></div>
+  </div>
+
+  <!-- 上周回顾 -->
+  <div class="section" id="section-history">
+    <div id="history-content"></div>
+  </div>
+
+  <!-- AI聊天 -->
+  <div class="section" id="section-chat">
+    <div class="chat-intro">直接跟我说想改什么，比如「周三换一道鱼」「这周不想吃豆芽」「给我备餐建议」👇</div>
+    <div class="quick-btns">
+      <button class="quick-btn" onclick="quickSend('帮我换一道鱼的菜')">换鱼菜</button>
+      <button class="quick-btn" onclick="quickSend('调味料怎么用？')">调味料</button>
+      <button class="quick-btn" onclick="quickSend('有没有更简单的做法？')">更简单</button>
+      <button class="quick-btn" onclick="quickSend('肉怎么分装急冻最好？')">分装技巧</button>
+      <button class="quick-btn" onclick="quickSend('这周采购要买什么？')">采购建议</button>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="msg ai">你好！我是你的备餐助手 🍳 有什么想改的食谱，或者关于买菜、备餐的问题，直接说吧～</div>
+    </div>
+    <div class="chat-input-area">
+      <input class="chat-input" id="chat-input" type="text" placeholder="输入问题或想改的内容..." />
+      <button class="chat-send" onclick="sendChat()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- 换菜单 Modal -->
+<div class="modal-overlay hidden" id="weekend-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📅 制定下周菜单</div>
+      <div class="modal-sub" id="modal-sub">步骤 1 / 3 — 选择保留的菜</div>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<script>
+// ==================== CONFIG ====================
+const GITHUB_TOKEN = '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';
+const GIST_FILENAME = 'mealprep-data.json';
+let GIST_ID = null; // will be found/created on init
+
+// ==================== MENU DATABASE ====================
+const MENU_DB = [
+  { id: 1, name: '姜汁猪肉片', meat: 'pork', icon: '🥩', note: '酱油+味醂+姜末，大火快炒2分钟', prep: { freeze: '猪肉片200g + 酱油1勺+味醂1勺+姜末腌好急冻', fridge: '配菜切好冷藏', cook: '解冻大火炒2分钟' }, veg: '青椒炒鸡蛋', vegNote: '青椒切丝+鸡蛋，盐+少许酱油' },
+  { id: 2, name: '照烧鸡腿', meat: 'chicken', icon: '🍗', note: '酱油+味醂+料酒，平底锅煎5分钟', prep: { freeze: '鸡腿200g + 酱油1勺+味醂1勺+料酒1勺腌好急冻', fridge: '配菜切好冷藏', cook: '平底锅中火煎5分钟' }, veg: '炒白菜', vegNote: '白菜+蒜末+盐，大火翻炒' },
+  { id: 3, name: '青椒炒肉末', meat: 'pork', icon: '🫑', note: '肉末+青椒+蒜末+蚝油，大火爆炒', prep: { freeze: '肉末150g压扁急冻（不腌）', fridge: '青椒切块冷藏', cook: '肉末解冻下锅炒散+青椒+蒜末' }, veg: '烫小松菜', vegNote: '焯水30秒，淋少许酱油' },
+  { id: 4, name: '味噌鸡腿盖饭', meat: 'chicken', icon: '🍗', note: '味噌+味醂+蒜末，煎好铺饭上', prep: { freeze: '鸡腿200g + 味噌1勺+味醂1勺+蒜末腌好急冻', fridge: '配菜切好冷藏', cook: '平底锅煎，直接铺饭上' }, veg: '烫菠菜', vegNote: '焯水挤干，淋酱油+芝麻' },
+  { id: 5, name: '照烧猪肉片', meat: 'pork', icon: '🥩', note: '酱油+味醂+糖收汁，下饭神器', prep: { freeze: '猪肉片200g + 酱油1勺+味醂1勺+糖半勺腌好急冻', fridge: '配菜切好冷藏', cook: '下锅收汁2分钟' }, veg: '炒豆芽', vegNote: '豆芽+蒜末+盐+少许醋，大火快炒' },
+  { id: 6, name: '盐烤鸡腿', meat: 'chicken', icon: '🍗', note: '盐+黑胡椒+料酒，煎至金黄', prep: { freeze: '鸡腿200g + 盐+黑胡椒+料酒1勺腌好急冻', fridge: '配菜切好冷藏', cook: '平底锅中火煎6分钟' }, veg: '炒娃娃菜', vegNote: '娃娃菜+蒜末+盐翻炒' },
+  { id: 7, name: '猪肉味噌炒白菜', meat: 'pork', icon: '🥩', note: '猪肉+白菜+味噌一锅炒', prep: { freeze: '猪肉片200g + 味噌1勺+蒜末+料酒腌好急冻', fridge: '白菜切块冷藏', cook: '猪肉+白菜同锅炒软' }, veg: '（白菜已入主菜）', vegNote: '主菜已含蔬菜' },
+  { id: 8, name: '蒜香猪肉片', meat: 'pork', icon: '🥩', note: '酱油+蚝油+蒜末，大火爆炒', prep: { freeze: '猪肉片200g + 酱油1勺+蚝油1勺+蒜末腌好急冻', fridge: '配菜切好冷藏', cook: '大火爆炒2分钟' }, veg: '烫菠菜', vegNote: '焯水挤干，淋酱油' },
+  { id: 9, name: '照烧猪肉盖饭', meat: 'pork', icon: '🥩', note: '酱油+味醂+糖，收汁铺饭', prep: { freeze: '猪肉片200g + 酱油1勺+味醂1勺+糖半勺腌好急冻', fridge: '配菜切好冷藏', cook: '煎炒收汁，铺饭上' }, veg: '炒娃娃菜', vegNote: '娃娃菜+蒜末+盐翻炒' },
+  { id: 10, name: '鸡胸肉炒小松菜', meat: 'chicken', icon: '🍗', note: '鸡胸切片+小松菜+蒜+盐，快炒', prep: { freeze: '鸡胸200g切片 + 盐+料酒+淀粉腌好急冻', fridge: '小松菜洗净冷藏', cook: '鸡胸滑炒至变色+小松菜' }, veg: '（小松菜已入主菜）', vegNote: '主菜已含蔬菜' },
+  { id: 11, name: '鸡腿肉炒青椒', meat: 'chicken', icon: '🍗', note: '鸡腿+青椒+蚝油+蒜末', prep: { freeze: '鸡腿200g切块 + 蚝油1勺+生抽+淀粉腌好急冻', fridge: '青椒切块冷藏', cook: '鸡腿炒熟+青椒翻炒' }, veg: '烫小松菜', vegNote: '焯水30秒，淋酱油' },
+  { id: 12, name: '麻婆豆腐', meat: 'pork', icon: '🫘', note: '肉末+豆腐+豆瓣酱，勾芡', prep: { freeze: '猪肉末150g压扁急冻', fridge: '豆腐当天买', cook: '肉末炒散+豆腐+豆瓣酱+勾芡' }, veg: '烫菠菜', vegNote: '焯水挤干，淋酱油' },
+  { id: 13, name: '番茄鸡蛋炒猪肉', meat: 'pork', icon: '🍅', note: '猪肉片+番茄+鸡蛋，家常味', prep: { freeze: '猪肉片200g + 生抽+淀粉腌好急冻', fridge: '番茄切块冷藏', cook: '肉片炒熟→番茄炒蛋同锅' }, veg: '（番茄已入主菜）', vegNote: '主菜已含蔬菜' },
+  { id: 14, name: '鸡腿南蛮漬', meat: 'chicken', icon: '🍗', note: '炸鸡腿+甜醋汁+塔塔酱，日式', prep: { freeze: '鸡腿200g + 盐+料酒腌好急冻', fridge: '配菜切好冷藏', cook: '平底锅煎+甜醋汁（酱油+醋+糖）' }, veg: '炒娃娃菜', vegNote: '娃娃菜+蒜末+盐翻炒' },
+  { id: 15, name: '猪肉豆腐锅', meat: 'pork', icon: '🥘', note: '猪肉片+豆腐+白菜+味噌，简单火锅', prep: { freeze: '猪肉片200g不腌急冻', fridge: '豆腐+白菜切好冷藏', cook: '砂锅加水烧开，下食材+味噌' }, veg: '（白菜已入主菜）', vegNote: '主菜已含蔬菜' },
+];
+
+const DAYS = ['周一', '周二', '周三', '周四', '周五'];
+const DEFAULT_WEEK = [1, 2, 3, 4, 5]; // menu IDs
+
+// ==================== STATE ====================
+let state = {
+  thisWeek: DEFAULT_WEEK.slice(),
+  lastWeek: [],
+  draftWeek: [],
+  ratings: {}, // { "weekKey-dayIndex": "good"|"bad" }
+  buyChecked: [], // array of checked item ids
+  lastSync: null
+};
+
+let currentDay = 0;
+let chatHistory = [];
+
+// ==================== GIST SYNC ====================
+async function findOrCreateGist() {
+  try {
+    const res = await fetch('https://api.github.com/gists', {
+      headers: { Authorization: `token ${GITHUB_TOKEN}`, 'User-Agent': 'meal-prep-app' }
+    });
+    const gists = await res.json();
+    const found = gists.find(g => g.files && g.files[GIST_FILENAME]);
+    if (found) {
+      GIST_ID = found.id;
+      return true;
+    }
+    // Create new
+    const create = await fetch('https://api.github.com/gists', {
+      method: 'POST',
+      headers: { Authorization: `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json', 'User-Agent': 'meal-prep-app' },
+      body: JSON.stringify({ description: 'Meal Prep Data', public: false, files: { [GIST_FILENAME]: { content: JSON.stringify(state) } } })
+    });
+    const created = await create.json();
+    GIST_ID = created.id;
+    return true;
+  } catch (e) { return false; }
+}
+
+async function loadFromGist() {
+  if (!GIST_ID) return;
+  try {
+    const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+      headers: { Authorization: `token ${GITHUB_TOKEN}`, 'User-Agent': 'meal-prep-app' }
+    });
+    const data = await res.json();
+    const content = data.files?.[GIST_FILENAME]?.content;
+    if (content) {
+      const parsed = JSON.parse(content);
+      state = { ...state, ...parsed };
+    }
+    setSyncBar('✅ 已同步 ' + new Date().toLocaleTimeString('zh', {hour:'2-digit',minute:'2-digit'}));
+  } catch (e) { setSyncBar('⚠️ 同步失败', true); }
+}
+
+async function saveToGist() {
+  if (!GIST_ID) return;
+  setSyncBar('⏳ 保存中...');
+  try {
+    await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+      method: 'PATCH',
+      headers: { Authorization: `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json', 'User-Agent': 'meal-prep-app' },
+      body: JSON.stringify({ files: { [GIST_FILENAME]: { content: JSON.stringify(state) } } })
+    });
+    setSyncBar('✅ 已保存 ' + new Date().toLocaleTimeString('zh', {hour:'2-digit',minute:'2-digit'}));
+  } catch (e) { setSyncBar('⚠️ 保存失败', true); }
+}
+
+function setSyncBar(msg, isError = false) {
+  const el = document.getElementById('sync-bar');
+  el.textContent = msg;
+  el.className = 'sync-bar' + (isError ? ' error' : '');
+}
+
+// ==================== RENDER RECIPE ====================
+function getMenu(id) { return MENU_DB.find(m => m.id === id) || MENU_DB[0]; }
+
+function renderDayTabs() {
+  document.getElementById('day-scroller').innerHTML = DAYS.map((d, i) =>
+    `<button class="day-btn ${i === currentDay ? 'active' : ''}" onclick="selectDay(${i})">${d}</button>`
+  ).join('');
+}
+
+function selectDay(i) { currentDay = i; renderDayTabs(); renderRecipe(); }
+
+function getRatingKey(dayIdx) { return `this-${dayIdx}`; }
+
+function renderRecipe() {
+  const menuId = state.thisWeek[currentDay];
+  const m = getMenu(menuId);
+  const ratingKey = getRatingKey(currentDay);
+  const rating = state.ratings[ratingKey];
+
+  document.getElementById('recipe-content').innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">${DAYS[currentDay]}的定食</div>
+        <span class="badge ${m.meat}">${m.meat === 'pork' ? '猪肉' : '鸡肉'}</span>
+      </div>
+      <div class="dish-row">
+        <div class="dish-icon main">${m.icon}</div>
+        <div class="dish-info"><div class="dish-name">${m.name}</div><div class="dish-note">${m.note}</div></div>
+      </div>
+      <div class="dish-row">
+        <div class="dish-icon veg">🥬</div>
+        <div class="dish-info"><div class="dish-name">${m.veg}</div><div class="dish-note">${m.vegNote}</div></div>
+      </div>
+      <div class="dish-row">
+        <div class="dish-icon soup">🍲</div>
+        <div class="dish-info"><div class="dish-name">味噌汤</div><div class="dish-note">热水+味噌+今日配料，2分钟</div></div>
+      </div>
+      <div class="dish-row">
+        <div class="dish-icon rice">🍚</div>
+        <div class="dish-info"><div class="dish-name">白米饭</div><div class="dish-note">急冻米饭微波3分钟</div></div>
+      </div>
+      <div class="rating-row">
+        <span class="rating-label">这道菜怎么样？</span>
+        <div class="rating-btns">
+          <button class="rating-btn ${rating === 'good' ? 'selected-good' : ''}" onclick="rate(${currentDay}, 'good')">👍 好吃</button>
+          <button class="rating-btn ${rating === 'bad' ? 'selected-bad' : ''}" onclick="rate(${currentDay}, 'bad')">👎 一般</button>
+        </div>
+      </div>
+    </div>
+    <div class="prep-box">
+      <div class="prep-box-title">备餐说明</div>
+      <div class="prep-line"><span class="prep-key">急冻</span>${m.prep.freeze}</div>
+      <div class="prep-line"><span class="prep-key">冷藏</span>${m.prep.fridge}</div>
+      <div class="prep-line"><span class="prep-key">下班后</span>${m.prep.cook}</div>
+    </div>
+  `;
+}
+
+function rate(dayIdx, val) {
+  const key = getRatingKey(dayIdx);
+  state.ratings[key] = state.ratings[key] === val ? null : val;
+  renderRecipe();
+  saveToGist();
+}
+
+// ==================== BUY LIST ====================
+const BUY_TEMPLATE = [
+  { section: '🥩 肉类（周日一次买）', items: [
+    { id: 'b1', name: '猪肉片（薄切）', qty: '约600g' },
+    { id: 'b2', name: '鸡腿肉', qty: '约400g' },
+    { id: 'b3', name: '猪肉末', qty: '约150g' },
+  ]},
+  { section: '🥬 蔬菜前半周（周日买）', items: [
+    { id: 'b4', name: '青椒', qty: '3～4个' },
+    { id: 'b5', name: '白菜', qty: '1/4颗' },
+    { id: 'b6', name: '小松菜', qty: '1把' },
+    { id: 'b7', name: '嫩豆腐', qty: '2盒' },
+    { id: 'b8', name: '鸡蛋', qty: '4～6个' },
+  ]},
+  { section: '🥦 蔬菜后半周（周三补买）', note: '周三下班顺路买', items: [
+    { id: 'b9', name: '菠菜', qty: '1把' },
+    { id: 'b10', name: '娃娃菜', qty: '1/2颗' },
+    { id: 'b11', name: '豆芽', qty: '1袋' },
+    { id: 'b12', name: '嫩豆腐', qty: '1盒' },
+  ]},
+  { section: '🫙 常备（没有再买）', note: '按家里存货决定', items: [
+    { id: 'b13', name: '味噌（みそ）', qty: '' },
+    { id: 'b14', name: '味醂（みりん）', qty: '' },
+    { id: 'b15', name: '料酒（酒）', qty: '' },
+    { id: 'b16', name: '酱油', qty: '' },
+    { id: 'b17', name: '蚝油', qty: '' },
+    { id: 'b18', name: '干海带芽', qty: '' },
+    { id: 'b19', name: '白芝麻', qty: '' },
+    { id: 'b20', name: '豆瓣酱', qty: '' },
+  ]},
+];
+
+function renderBuy() {
+  const checked = new Set(state.buyChecked || []);
+  let html = '';
+  BUY_TEMPLATE.forEach(sec => {
+    html += `<div class="buy-section-title">${sec.section}</div><div class="card">`;
+    sec.items.forEach(item => {
+      const isChecked = checked.has(item.id);
+      html += `<div class="buy-item ${isChecked ? 'checked' : ''}" onclick="toggleBuy('${item.id}', this)">
+        <div class="buy-checkbox"></div>
+        <div class="buy-item-text">${item.name}</div>
+        <div class="buy-item-qty">${item.qty}</div>
+      </div>`;
+    });
+    html += '</div>';
+    if (sec.note) html += `<div class="buy-note">※ ${sec.note}</div>`;
+  });
+  html += `<button class="btn btn-secondary" onclick="clearBuyChecked()" style="margin-top:8px">🔄 清空勾选</button>`;
+  document.getElementById('buy-content').innerHTML = html;
+}
+
+function toggleBuy(id, el) {
+  const checked = new Set(state.buyChecked || []);
+  checked.has(id) ? checked.delete(id) : checked.add(id);
+  state.buyChecked = [...checked];
+  el.classList.toggle('checked');
+  saveToGist();
+}
+
+function clearBuyChecked() {
+  state.buyChecked = [];
+  renderBuy();
+  saveToGist();
+}
+
+// ==================== HISTORY ====================
+function renderHistory() {
+  if (!state.lastWeek || state.lastWeek.length === 0) {
+    document.getElementById('history-content').innerHTML = `
+      <div class="info-box">还没有上周的记录。完成第一周并覆盖菜单后，这里会显示上周食谱和评分。</div>`;
+    return;
+  }
+  let html = '<div class="info-box">这是上周的食谱和评分记录，供参考。</div>';
+  state.lastWeek.forEach((menuId, i) => {
+    const m = getMenu(menuId);
+    const ratingKey = `last-${i}`;
+    const rating = state.ratings[ratingKey];
+    const ratingText = rating === 'good' ? '👍 好吃' : rating === 'bad' ? '👎 一般' : '未评分';
+    html += `<div class="card" style="margin-bottom:8px">
+      <div class="card-header"><div class="card-title" style="font-size:14px">${DAYS[i]} · ${m.name}</div><span class="badge ${m.meat}">${m.meat === 'pork' ? '猪肉' : '鸡肉'}</span></div>
+      <div style="padding:0.6rem 1.25rem;font-size:13px;color:var(--ink3)">${ratingText}</div>
+    </div>`;
+  });
+  document.getElementById('history-content').innerHTML = html;
+}
+
+// ==================== WEEKEND MODAL ====================
+let modalStep = 1;
+let keepFlags = [true, true, true, true, true];
+let draftMenuIds = [];
+
+function openWeekend() {
+  modalStep = 1;
+  keepFlags = [true, true, true, true, true];
+  draftMenuIds = [];
+  renderModal();
+  document.getElementById('weekend-modal').classList.remove('hidden');
+}
+
+function closeWeekend() {
+  document.getElementById('weekend-modal').classList.add('hidden');
+}
+
+function renderModal() {
+  const sub = document.getElementById('modal-sub');
+  const body = document.getElementById('modal-body');
+  const footer = document.getElementById('modal-footer');
+
+  if (modalStep === 1) {
+    sub.textContent = '步骤 1 / 3 — 选择要保留的菜';
+    let html = '<div class="info-box">选择这周好吃的留下来，其余的AI会帮你换新的。</div>';
+    state.thisWeek.forEach((menuId, i) => {
+      const m = getMenu(menuId);
+      const rKey = `this-${i}`;
+      const rating = state.ratings[rKey];
+      const rText = rating === 'good' ? ' 👍' : rating === 'bad' ? ' 👎' : '';
+      html += `<div class="week-slot">
+        <div class="week-slot-header">
+          <span class="week-slot-day">${DAYS[i]}</span>
+          <span class="week-slot-dish">${m.name}${rText}</span>
+          <button class="keep-btn ${keepFlags[i] ? 'kept' : 'swap'}" onclick="toggleKeep(${i})">${keepFlags[i] ? '✓ 保留' : '↺ 换掉'}</button>
+        </div>
+      </div>`;
+    });
+    body.innerHTML = html;
+    footer.innerHTML = `<button class="btn btn-primary" onclick="goStep2()">下一步：AI生成新菜单 →</button><button class="btn btn-secondary" onclick="closeWeekend()">取消</button>`;
+  }
+
+  else if (modalStep === 2) {
+    sub.textContent = '步骤 2 / 3 — AI生成下周菜单';
+    body.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--ink3)">🤖 AI正在为你搭配下周菜单...</div>`;
+    footer.innerHTML = '';
+    generateDraft();
+  }
+
+  else if (modalStep === 3) {
+    sub.textContent = '步骤 3 / 3 — 确认下周菜单';
+    let html = '<div class="info-box">满意的话点「确认覆盖」，本周变上周，下周变本周。</div><div class="draft-card"><div class="draft-title">下周菜单草稿</div>';
+    draftMenuIds.forEach((id, i) => {
+      const m = getMenu(id);
+      html += `<div class="draft-row"><span class="draft-day">${DAYS[i]}</span>${m.name}</div>`;
+    });
+    html += '</div>';
+    body.innerHTML = html;
+    footer.innerHTML = `
+      <button class="btn btn-primary" onclick="confirmOverwrite()">✅ 确认覆盖，开始新的一周</button>
+      <button class="btn btn-secondary" onclick="goStep2()">🔄 重新生成</button>
+      <button class="btn btn-secondary" onclick="closeWeekend()">取消</button>`;
+  }
+}
+
+function toggleKeep(i) {
+  keepFlags[i] = !keepFlags[i];
+  renderModal();
+}
+
+async function goStep2() {
+  modalStep = 2;
+  renderModal();
+}
+
+async function generateDraft() {
+  const kept = state.thisWeek.map((id, i) => keepFlags[i] ? id : null);
+  const usedIds = kept.filter(Boolean);
+  const goodIds = Object.entries(state.ratings)
+    .filter(([k, v]) => v === 'good' && k.startsWith('this-'))
+    .map(([k]) => state.thisWeek[parseInt(k.split('-')[1])]);
+  const badIds = Object.entries(state.ratings)
+    .filter(([k, v]) => v === 'bad')
+    .map(([k]) => {
+      const parts = k.split('-');
+      const week = parts[0] === 'this' ? state.thisWeek : state.lastWeek;
+      return week?.[parseInt(parts[1])];
+    }).filter(Boolean);
+
+  const available = MENU_DB.filter(m => !usedIds.includes(m.id) && !badIds.includes(m.id));
+  const needCount = keepFlags.filter(f => !f).length;
+
+  try {
+    const prompt = `你是备餐助手。当前菜库有${MENU_DB.length}道菜。
+已保留的菜ID：${JSON.stringify(usedIds)}
+需要新推荐${needCount}道菜（ID不在已保留中）
+可选菜库：${JSON.stringify(available.map(m => ({id:m.id, name:m.name, meat:m.meat})))}
+用户喜欢的菜ID：${JSON.stringify(goodIds)}
+用户不喜欢的菜ID（避开）：${JSON.stringify(badIds)}
+
+规则：
+1. 一周内猪肉和鸡肉要交替，不要连续3天同一种肉
+2. 避开用户不喜欢的菜
+3. 优先推荐用户喜欢的菜
+4. 返回格式：只返回JSON数组，长度为5，对应周一到周五的菜ID，保留的位置用原来的ID，需要新推荐的位置填新ID。
+
+已知保留情况（true=保留，false=需要新菜）：${JSON.stringify(keepFlags)}
+当前菜单：${JSON.stringify(state.thisWeek)}
+
+只返回JSON数组，例如：[1,4,3,6,5]`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 200, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || '';
+    const match = text.match(/\[[\d,\s]+\]/);
+    if (match) {
+      draftMenuIds = JSON.parse(match[0]);
+      modalStep = 3;
+      renderModal();
+      return;
+    }
+  } catch (e) {}
+
+  // Fallback: manual selection
+  fallbackDraft(kept, available);
+}
+
+function fallbackDraft(kept, available) {
+  let pool = [...available];
+  const result = kept.map(id => {
+    if (id) return id;
+    const pick = pool.shift();
+    return pick ? pick.id : MENU_DB[0].id;
+  });
+  draftMenuIds = result;
+  modalStep = 3;
+  renderModal();
+}
+
+function confirmOverwrite() {
+  // Move this week ratings to last week
+  DAYS.forEach((_, i) => {
+    state.ratings[`last-${i}`] = state.ratings[`this-${i}`] || null;
+    delete state.ratings[`this-${i}`];
+  });
+  state.lastWeek = [...state.thisWeek];
+  state.thisWeek = [...draftMenuIds];
+  state.draftWeek = [];
+  state.buyChecked = [];
+  closeWeekend();
+  currentDay = 0;
+  renderDayTabs();
+  renderRecipe();
+  renderBuy();
+  renderHistory();
+  saveToGist();
+  alert('✅ 新的一周菜单已生效！');
+}
+
+// ==================== CHAT ====================
+const SYSTEM_PROMPT = `你是一个专门帮助规划一周定食备餐的助手。用户住在日本，两人份晚餐为主。
+当前本周菜单：${() => state.thisWeek.map((id,i) => `${DAYS[i]}:${getMenu(id).name}`).join(', ')}
+菜库共${MENU_DB.length}道菜：${MENU_DB.map(m => m.name).join('、')}
+调味料：酱油、味醂、料酒、味噌、生姜、蒜、蚝油、淀粉、豆瓣酱
+蔬菜偏好：小松菜、菠菜、白菜、娃娃菜、青椒（不喜欢西兰花）
+备餐原则：肉类腌好分装急冻；蔬菜前半周周日买，后半周周三补买；米饭分装急冻；下班后10-15分钟搞定。
+回答简洁实用，用中文。`;
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addChatMsg(text, 'user');
+  chatHistory.push({ role: 'user', content: text });
+  const loading = addChatMsg('思考中...', 'loading');
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800, system: SYSTEM_PROMPT, messages: chatHistory })
+    });
+    const data = await res.json();
+    const reply = data.content?.find(b => b.type === 'text')?.text || '抱歉出了点问题，请重试。';
+    loading.remove();
+    addChatMsg(reply, 'ai');
+    chatHistory.push({ role: 'assistant', content: reply });
+  } catch (e) {
+    loading.remove();
+    addChatMsg('网络出错了，请检查连接后重试。', 'ai');
+  }
+}
+
+function addChatMsg(text, cls) {
+  const container = document.getElementById('chat-messages');
+  const el = document.createElement('div');
+  el.className = 'msg ' + cls;
+  el.textContent = text;
+  container.appendChild(el);
+  el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  return el;
+}
+
+function quickSend(text) {
+  document.getElementById('chat-input').value = text;
+  sendChat();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
+});
+
+// ==================== TAB SWITCH ====================
+function switchTab(tab, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('section-' + tab).classList.add('active');
+  btn.classList.add('active');
+  if (tab === 'buy') renderBuy();
+  if (tab === 'history') renderHistory();
+}
+
+// ==================== WEEKEND HIGHLIGHT ====================
+function checkWeekend() {
+  const day = new Date().getDay(); // 0=Sun, 6=Sat
+  if (day === 0 || day === 6) {
+    document.getElementById('weekend-btn').classList.add('highlight');
+  }
+}
+
+// ==================== INIT ====================
+async function init() {
+  setSyncBar('⏳ 连接中...');
+  const ok = await findOrCreateGist();
+  if (ok) {
+    await loadFromGist();
+  } else {
+    setSyncBar('⚠️ 离线模式', true);
+  }
+  checkWeekend();
+  renderDayTabs();
+  renderRecipe();
+}
+
+init();
+</script>
+</body>
+</html>
